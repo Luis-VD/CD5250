@@ -44,16 +44,24 @@ ssize_t onebyte_read(struct file *filep, char *buf, size_t count, loff_t *f_pos)
 	if(*buf != 0){
 		return 0;	
 	}
-	copy_to_user(buf, onebyte_data, sizeof(char));
+	raw_copy_to_user(buf, onebyte_data, sizeof(char));
 	
 	bytes_read ++;
 	return bytes_read;
 }
 
-ssize_t onebyte_write(struct file *filep, const char *buf,
-size_t count, loff_t *f_pos)
+ssize_t onebyte_write(struct file *filep, const char *buf, size_t count, loff_t *f_pos)
 {
-	/*please complete the function on your own*/
+	int bytes_write = 0;	
+	raw_copy_from_user(onebyte_data, buf, sizeof(char));
+
+	if(count > sizeof(char))
+	{
+		printk(KERN_ALERT "No space left on device\n");
+		return -ENOSPC; 
+	}
+	bytes_write ++;
+	return bytes_write;
 }
 
 static int onebyte_init(void)
@@ -66,14 +74,14 @@ static int onebyte_init(void)
 	return result;
 	}
 	// allocate one byte of memory for storage
-	// kmalloc is just like malloc, the second parameter is// the type of memory to be allocated.
+	// kmalloc is just like malloc, the second parameter is
+	// the type of memory to be allocated.
 	// To release the memory allocated by kmalloc, use kfree.
 	onebyte_data = kmalloc(sizeof(char), GFP_KERNEL);
 	if (!onebyte_data) {
 	onebyte_exit();
 	// cannot allocate memory
-	// return no memory error, negative signify a
-	failure
+	// return no memory error, negative signify a failure
 	return -ENOMEM;
 	}
 	// initialize the value to be X
